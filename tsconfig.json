@@ -1,4 +1,5 @@
 {
+  "include": ["**/*.ts", "**/*.tsx", "./.*.cjs"],
   "compilerOptions": {
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -10,8 +11,10 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "module": "ES2022",
     "noEmit": true,
-    "lib": ["es2022", "dom", "dom.iterable"]
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "types": ["@webgpu/types", "vite/client"],
+    "jsx": "react"
   }
 }
