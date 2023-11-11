@@ -1,1 +1,1 @@
-# maler
+# Repo setup
