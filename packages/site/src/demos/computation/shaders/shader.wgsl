@@ -1,17 +1,6 @@
-@vertex
-fn vs(
-    @builtin(vertex_index) vertexIndex: u32
-) -> @builtin(position) vec4f {
-    let pos = array(
-        vec2f(0.0, 0.5),  // top center
-        vec2f(-0.5, -0.5),  // bottom left
-        vec2f(0.5, -0.5)   // bottom right
-    );
+@group(0) @binding(0) var<storage, read_write> data: array<f32>;
 
-    return vec4f(pos[vertexIndex], 0.0, 1.0);
-}
-
-@fragment
-fn fs() -> @location(0) vec4f {
-    return vec4f(0.0, 0.0, 1.0, 1.0);
+@compute @workgroup_size(1) fn computeSomething(@builtin(global_invocation_id) id: vec3<u32>) {
+    let i = id.x;
+    data[i] = data[i] * 2.0;
 }
