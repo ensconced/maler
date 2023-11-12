@@ -38,7 +38,7 @@ export default function main(
   preferredTextureFormat: GPUTextureFormat,
 ): void {
   const module = device.createShaderModule({
-    label: "our hardcoded red triangle shaders",
+    label: "circle shaders",
     code: shaders,
   });
 
