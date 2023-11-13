@@ -1,18 +1,20 @@
 import shaders from "./shaders/shader.wgsl?raw";
 
-const GRID_SIZE = 4;
+const GRID_SIZE = 32;
+
+const gridDimensions = new Float32Array([GRID_SIZE, GRID_SIZE]);
 
 const vertices = new Float32Array([
   //   X,    Y,
   -0.8,
-  -0.8, // Triangle 1 (Blue)
+  -0.8, // Triangle 1
   0.8,
   -0.8,
   0.8,
   0.8,
 
   -0.8,
-  -0.8, // Triangle 2 (Red)
+  -0.8, // Triangle 2
   0.8,
   0.8,
   -0.8,
@@ -24,6 +26,14 @@ function render(
   context: GPUCanvasContext,
   preferredTextureFormat: GPUTextureFormat,
 ): void {
+  const gridDimensionsUniformBuffer = device.createBuffer({
+    label: "Grid dimensions",
+    size: gridDimensions.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  device.queue.writeBuffer(gridDimensionsUniformBuffer, 0, gridDimensions);
+
   const vertexBuffer = device.createBuffer({
     label: "Cell vertices",
     size: vertices.byteLength,
@@ -31,18 +41,6 @@ function render(
   });
 
   device.queue.writeBuffer(vertexBuffer, 0, vertices);
-
-  const vertexBufferLayout: GPUVertexBufferLayout = {
-    arrayStride: 8,
-    attributes: [
-      // position
-      {
-        format: "float32x2",
-        offset: 0,
-        shaderLocation: 0,
-      },
-    ],
-  };
 
   const cellShaderModule = device.createShaderModule({
     label: "Cell shaders",
@@ -54,7 +52,19 @@ function render(
     vertex: {
       module: cellShaderModule,
       entryPoint: "vertexMain",
-      buffers: [vertexBufferLayout],
+      buffers: [
+        {
+          arrayStride: 8,
+          attributes: [
+            // position
+            {
+              format: "float32x2",
+              offset: 0,
+              shaderLocation: 0,
+            },
+          ],
+        },
+      ],
     },
     fragment: {
       module: cellShaderModule,
@@ -66,6 +76,19 @@ function render(
       ],
     },
     layout: "auto",
+  });
+
+  const cellRendererBindGroup = device.createBindGroup({
+    label: "Cell renderer bind group",
+    layout: cellPipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: gridDimensionsUniformBuffer,
+        },
+      },
+    ],
   });
 
   const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -89,7 +112,8 @@ function render(
   const pass = encoder.beginRenderPass(renderPassDescriptor);
   pass.setPipeline(cellPipeline);
   pass.setVertexBuffer(0, vertexBuffer);
-  pass.draw(vertices.length / 2);
+  pass.setBindGroup(0, cellRendererBindGroup);
+  pass.draw(vertices.length / 2, GRID_SIZE * GRID_SIZE);
   pass.end();
   const commandBuffer = encoder.finish();
   device.queue.submit([commandBuffer]);
